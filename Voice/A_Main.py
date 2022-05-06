@@ -22,14 +22,14 @@ def record_audio():
             p = pyaudio.PyAudio()
             stream = p.open(format=cmd.FRT,channels=cmd.CHAN,rate=cmd.RT,
                            input=True,frames_per_buffer=cmd.CHUNK) 
-            print("rec")
-            frames = [] 
 
+            logger.debug("Started recording")
+            frames = [] 
             for i in range(0, int(cmd.RT / cmd.CHUNK * cmd.REC_SEC)):
                 data = stream.read(cmd.CHUNK)
                 frames.append(data)
 
-            print("done")
+            logger.debug("Done")
             stream.stop_stream(); stream.close()
             p.terminate()
             w = wave.open("output.wav", 'wb')
@@ -37,7 +37,6 @@ def record_audio():
             w.writeframes(b''.join(frames));w.close()
             sample = speech_r.WavFile('output.wav')
             flag = 0
-            logger.debug(f"{flag}")
             r = speech_r.Recognizer()
 
             with sample as audio:
@@ -47,20 +46,33 @@ def record_audio():
                     word = voice_ouput.split(' ')
                     flag=0
                 except speech_r.UnknownValueError:
-                    print('Повторите')
+                    logger.error('Ничего не было сказано')
+                    playsound("files/audio/file_repeat.mp3")
                     flag=1
                     pass
+    detect_mood()
 
 def detect_mood():
     for i in word:
         for a in cmd.sad_array:
+                if i == a:
+                    if b.message == "S":
+                        playsound("files/audio/file_S.mp3")
+                        client.publish("tomatocoder/report","S")
+                        
+                        logger.debug("Sad")
+                    else:
+                        playsound("files/audio/file_mood.mp3")
+                        record_audio()
+        for a in cmd.happy_array:
             if i == a:
-                playsound("files/audio/file_S.mp3")
-                client.publish("tomatocoder/report","S")
-        for b in cmd.happy_array:
-            if i == b:
-                playsound("files/audio/file_H.mp3")
-                client.publish("tomatocoder/report","H")
+                if b.message == "H":
+                    playsound("files/audio/file_H.mp3")
+                    client.publish("tomatocoder/report","H")
+                    logger.debug("Happy")
+                else:
+                    playsound("files/audio/file_mood.mp3") 
+                    record_audio()
 
 
 
@@ -72,9 +84,11 @@ client.connect("mqtt.pi40.ru", 1883)
 cap=cv2.VideoCapture(0)
 b = HaarCascade(cap)
 
+#---MAIN---#
 b.main()
+playsound("files/audio/file_wazup.mp3")
 record_audio()
-detect_mood()
+# detect_mood()
 
 ftp.uploadFile("output.wav")
 logger.debug("uploaded AUDIO")

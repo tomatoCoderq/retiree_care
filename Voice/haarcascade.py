@@ -8,6 +8,8 @@ from ftpOwn import FtpOwn
 
 
 class HaarCascade():
+    message = ""
+
     def __init__(self,video):
         self.video=video
         self.ftp = FtpOwn()
@@ -70,9 +72,14 @@ class HaarCascade():
         face_recognizer.train(faces, np.array(labels))
         logger.debug("Подготовка изображений для обучения...")
         text_old = ''
-        isRead, image = self.video.read()
-        face, rect = self.detect_face(image)
-        predicted_img1, b = self.predict(image, face_recognizer)
+        is_face = True
+        while is_face:
+            isRead, image = self.video.read()
+            face, rect = self.detect_face(image)
+            predicted_img1, b = self.predict(image, face_recognizer)
+            if face is not None:
+                is_face=False
+                logger.debug("NONE")
         os.remove("frame.jpg")
         cv2.imwrite("frame.jpg", predicted_img1)
         self.ftp.uploadFile("frame.jpg")
@@ -85,11 +92,13 @@ class HaarCascade():
                     print('Sad')
                     playsound("files/audio/audio_Sad.mp3", True)
                     text_old = label_text
+                    self.message = "S"
                     time.sleep(3)
                 elif label_text == 'Happy':
                     print('Happy')
                     playsound("files/audio/audio_Happy.mp3", True)
                     text_old = label_text
+                    self.message = "H"
                     time.sleep(3)
                 else:
                     pass
@@ -101,11 +110,13 @@ class HaarCascade():
                         print('Sad')
                         playsound("files/audio/audio_Sad.mp3", True)
                         text_old = label_text
+                        self.message = "S"
                         time.sleep(3)
                     elif label_text == 'Happy':
                         print('Happy')
                         playsound("files/audio/audio_Happy.mp3", True)
                         text_old = label_text
+                        self.message = "H"
                         time.sleep(3)
                     else:
                         pass
