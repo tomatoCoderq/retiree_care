@@ -10,7 +10,6 @@ import cmd
 from haarcascade import HaarCascade
 from ftpOwn import FtpOwn
 
-
 logger.add("debug.log", format=" {time} {message}") 
 word = []
 

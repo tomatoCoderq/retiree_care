@@ -23,7 +23,7 @@ class HaarCascade():
         return gray[y:y + w, x:x + h], faces[0]
 
     def prepare_training_data(self):
-        dirs = os.listdir('/Users/tomatocoder/Downloads/Voice/img_train/')
+        dirs = os.listdir('img_train/')
         faces = []
         labels = []
         for image_path in dirs:
