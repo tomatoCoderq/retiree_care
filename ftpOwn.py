@@ -12,7 +12,7 @@ class FtpOwn():
     def ftpConnect(self, ip, port):
         self.ftp.set_pasv(False)
         self.ftp.connect(ip, port)
-        self.ftp.login("testuser", "test")
+        self.ftp.login("testuser", "pass")
         logger.info(self.ftp.retrlines('LIST'))
         logger.debug(f"CONNECTED TO {ip, port} ")
 

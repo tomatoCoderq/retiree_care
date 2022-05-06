@@ -1,6 +1,3 @@
-from calendar import c
-from distutils.command.clean import clean
-from email import message
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
 from loguru import logger
@@ -25,15 +22,13 @@ async def report(message:types.Message):
         client.loop_start()
         client.message_callback_add("tomatocoder/report", receiving_message_report)
         if message_report == "S":
-            print(message_report)
-            print("SAD")
+            logger.debug("SAD")
         else:
-            print(message_report)
-            print("HAPPY")
+            logger.debug("HAPPY")
 
-        photo = open('/Users/tomatocoder/Desktop/telegram-wro/photo_audio/frame.jpg', 'rb')
+        photo = open('photo_audio/frame.jpg', 'rb')
         logger.debug(f"opened PHOTO file")
-        audio = open('/Users/tomatocoder/Desktop/telegram-wro/photo_audio/output.wav', 'rb')
+        audio = open('photo_audio/output.wav', 'rb')
         logger.debug(f"opened AUDIO file")
 
         await message.answer("""Ваш отчёт: 
@@ -45,12 +40,10 @@ async def report(message:types.Message):
     except (timeout, KeyboardInterrupt):
         ftp.quitFile()
         
+
 def receiving_message_report(client, userdata, msg):
     global message_report
     message_report = msg.payload.decode()
-
-print("UP"+message_report)
-
 
 def register_handlers_report(dp:Dispatcher):
     dp.register_message_handler(report, Text(equals=cmd.button2))
