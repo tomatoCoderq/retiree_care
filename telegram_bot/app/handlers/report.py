@@ -23,6 +23,7 @@ async def report(message:types.Message):
         client.message_callback_add("tomatocoder/report", receiving_message_report)
         if message_report == "S":
             logger.debug("SAD")
+            
         else:
             logger.debug("HAPPY")
 

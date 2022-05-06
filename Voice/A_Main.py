@@ -4,6 +4,7 @@ from playsound import playsound
 import speech_recognition as speech_r
 import pyaudio
 import wave
+import random
 from loguru import logger
 import paho.mqtt.client as mqtt
 import cmd
@@ -59,7 +60,6 @@ def detect_mood():
                     if b.message == "S":
                         playsound("files/audio/file_S.mp3")
                         client.publish("tomatocoder/report","S")
-                        
                         logger.debug("Sad")
                     else:
                         playsound("files/audio/file_mood.mp3")
