@@ -8,43 +8,71 @@ from ftpOwn import FtpOwn
 
 
 message_report = ''
+message_nuero = ''
+pulse = ''
+brain_activity = ''
+var = ''
+
+
+def receiving_message_report(client, userdata, msg):
+    global message_report
+    message_report = msg.payload.decode()
+
+def receiving_message_nuero(client, userdata, msg):
+    global message_nuero
+    message_nuero = msg.payload.decode()
+    print(message_nuero)
+
+def retiree_status():
+    global pulse, brain_activity
+    if len(message_nuero) < 4:
+        pass
+    else:
+        brain_activity = message_nuero[0:2]
+        pulse = message_nuero[2:]
+        if int(pulse) > 75 and int(pulse) < 85:
+            pass
+        elif int(pulse) < 75:
+            print("too low")
+        else:
+            print("too high")
+
+
 async def report(message:types.Message):
+    global pulse, brain_activity
     try:
         ftp = FtpOwn()
-        ftp.ftpConnect("213.226.112.19", 21)
+        ftp.ftpConnect(cmd.ip, 21)
         ftp.downloadFile("frame.jpg", "photo_audio/frame.jpg")
         ftp.downloadFile("output.wav", "photo_audio/output.wav")
 
         client = mqtt.Client()
         client.username_pw_set("tomatocoder", "Coder_tomato1")
         client.connect("mqtt.pi40.ru", 1883)
-        client.subscribe("tomatocoder/report")
+        client.subscribe(cmd.topic_report)
+        client.subscribe(cmd.topic_neuro_modules)
+        client.message_callback_add(cmd.topic_report, receiving_message_report)
+        client.message_callback_add(cmd.topic_neuro_modules, receiving_message_nuero)
         client.loop_start()
-        client.message_callback_add("tomatocoder/report", receiving_message_report)
-        if message_report == "S":
-            logger.debug("SAD")
-            
-        else:
-            logger.debug("HAPPY")
 
         photo = open('photo_audio/frame.jpg', 'rb')
         logger.debug(f"opened PHOTO file")
         audio = open('photo_audio/output.wav', 'rb')
         logger.debug(f"opened AUDIO file")
 
-        await message.answer("""Ваш отчёт: 
-        
-        """)
+        if len(message_nuero) >= 4:
+            brain_activity = message_nuero[0:2]
+            pulse = message_nuero[2:]
+                     
+        await message.answer(f"""Ваш отчёт: 
+        Пульс пенсионера - {pulse}
+        d - 12
+        Мозговая активность - {brain_activity}""")
         await message.answer_photo(photo=photo)
         await message.answer_audio(audio=audio)
         logger.info(f"Send photo and audio")
     except (timeout, KeyboardInterrupt):
         ftp.quitFile()
-        
-
-def receiving_message_report(client, userdata, msg):
-    global message_report
-    message_report = msg.payload.decode()
 
 def register_handlers_report(dp:Dispatcher):
     dp.register_message_handler(report, Text(equals=cmd.button2))

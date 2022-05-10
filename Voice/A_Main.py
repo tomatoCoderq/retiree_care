@@ -5,11 +5,13 @@ import speech_recognition as speech_r
 import pyaudio
 import wave
 import random
+import time
 from loguru import logger
 import paho.mqtt.client as mqtt
 import cmd
 from haarcascade import HaarCascade
 from ftpOwn import FtpOwn
+
 
 logger.add("debug.log", format=" {time} {message}") 
 word = []
@@ -29,13 +31,12 @@ def record_audio():
             for i in range(0, int(cmd.RT / cmd.CHUNK * cmd.REC_SEC)):
                 data = stream.read(cmd.CHUNK)
                 frames.append(data)
-
             logger.debug("Done")
-            stream.stop_stream(); stream.close()
-            p.terminate()
+
+            stream.stop_stream(); stream.close();p.terminate()
             w = wave.open("output.wav", 'wb')
             w.setnchannels(cmd.CHAN); w.setsampwidth(p.get_sample_size(cmd.FRT)); w.setframerate(cmd.RT)
-            w.writeframes(b''.join(frames));w.close()
+            w.writeframes(b''.join(frames)); w.close()
             sample = speech_r.WavFile('output.wav')
             flag = 0
             r = speech_r.Recognizer()
@@ -59,8 +60,12 @@ def detect_mood():
                 if i == a:
                     if b.message == "S":
                         playsound("files/audio/file_S.mp3")
+                        time.sleep(1)
+                        #Добавить предложение рассказать шутку
                         client.publish("tomatocoder/report","S")
                         logger.debug("Sad")
+                        playsound(f"files/audio/{cmd.audio_jokes[random.randint(0,2)]}.mp3")
+                        break
                     else:
                         playsound("files/audio/file_mood.mp3")
                         record_audio()
@@ -75,12 +80,12 @@ def detect_mood():
                     record_audio()
 
 
-
 ftp = FtpOwn()
 ftp.ftpConnect("213.226.112.19", 21)
 client = mqtt.Client()
 client.username_pw_set("tomatocoder", "Coder_tomato1")
 client.connect("mqtt.pi40.ru", 1883)
+
 cap=cv2.VideoCapture(0)
 b = HaarCascade(cap)
 
@@ -88,7 +93,6 @@ b = HaarCascade(cap)
 b.main()
 playsound("files/audio/file_wazup.mp3")
 record_audio()
-# detect_mood()
 
 ftp.uploadFile("output.wav")
 logger.debug("uploaded AUDIO")

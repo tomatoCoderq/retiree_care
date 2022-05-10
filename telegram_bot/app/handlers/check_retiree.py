@@ -2,16 +2,14 @@ from loguru import logger
 from aiogram import types, Dispatcher
 from paho.mqtt import client
 from aiogram.dispatcher.filters import Text
-
-
 import keyboards
 import cmd
+
 
 client = client.Client()
 client.username_pw_set("tomatocoder", "Coder_tomato1")
 client.connect("mqtt.pi40.ru", 1883)
-client.subscribe(cmd.go_topic)#топик отправки
-
+client.subscribe(cmd.go_topic)
 
 async def check(message:types.Message):
     client.loop_start()

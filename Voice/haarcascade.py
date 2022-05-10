@@ -72,14 +72,21 @@ class HaarCascade():
         face_recognizer.train(faces, np.array(labels))
         logger.debug("Подготовка изображений для обучения...")
         text_old = ''
-        is_face = True
-        while is_face:
+        is_face = True 
+        count = 0
+
+        while count < 50:
+            print(is_face)
             isRead, image = self.video.read()
             face, rect = self.detect_face(image)
             predicted_img1, b = self.predict(image, face_recognizer)
+            cv2.imshow("screen", predicted_img1)
+            key = cv2.waitKey(1)
             if face is not None:
+                count += 1
                 is_face=False
-                logger.debug("NONE")
+        cv2.destroyWindow("screen")
+        
         os.remove("frame.jpg")
         cv2.imwrite("frame.jpg", predicted_img1)
         self.ftp.uploadFile("frame.jpg")
@@ -120,6 +127,5 @@ class HaarCascade():
                         time.sleep(3)
                     else:
                         pass
-        key = cv2.waitKey(1)
         cv2.destroyAllWindows()
         self.video.release()

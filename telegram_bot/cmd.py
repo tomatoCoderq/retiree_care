@@ -1,3 +1,6 @@
-button1 = "Проведать пенсионера"
-button2 = "Отчёт"
+button1 = "☑️Проведать пенсионера☑️"
+button2 = "📔Отчёт📔"
 go_topic = "tomatocoder/go"
+ip = "213.226.112.19"
+topic_neuro_modules = "tomatocoder/neuro"
+topic_report = "tomatocoder/report"
