@@ -1,5 +1,6 @@
 import cv2
 import os
+import socket
 from playsound import playsound
 import speech_recognition as speech_r
 import pyaudio
@@ -13,9 +14,15 @@ from haarcascade import HaarCascade
 from ftpOwn import FtpOwn
 
 
-logger.add("debug.log", format=" {time} {message}") 
+logger.add("debug.log", format="| {time} | {level} | {message}") 
 word = []
+message_complete = ''
 
+
+def receiving_message_complete(client, userdata, msg):
+    global message_complete
+    message_complete = msg.payload.decode()
+    print(message_complete)
 
 def record_audio():
     global word
@@ -46,6 +53,7 @@ def record_audio():
                     content = r.record(audio)
                     voice_ouput = r.recognize_google(audio_data=content, language="ru-RU")
                     word = voice_ouput.split(' ')
+                    logger.debug(word)
                     flag=0
                 except speech_r.UnknownValueError:
                     logger.error('Ничего не было сказано')
@@ -55,20 +63,27 @@ def record_audio():
     detect_mood()
 
 def detect_mood():
+    is_happyOrSad = ''
     for i in word:
         for a in cmd.sad_array:
-                if i == a:
-                    if b.message == "S":
-                        playsound("files/audio/file_S.mp3")
-                        time.sleep(1)
-                        #Добавить предложение рассказать шутку
-                        client.publish("tomatocoder/report","S")
-                        logger.debug("Sad")
-                        playsound(f"files/audio/{cmd.audio_jokes[random.randint(0,2)]}.mp3")
-                        break
-                    else:
-                        playsound("files/audio/file_mood.mp3")
-                        record_audio()
+            if i == a:
+                if b.message == "S":
+                    playsound("files/audio/file_S.mp3")
+                    time.sleep(1)
+                    #Добавить предложение рассказать шутку
+                    client.publish("tomatocoder/report","S")
+                    logger.debug("Sad")
+                    playsound(f"files/audio/{cmd.audio_jokes[random.randint(0,2)]}.mp3")
+                    return None
+                else:
+                    playsound("files/audio/file_mood.mp3")
+                    record_audio()
+                    pass
+            else:
+                is_happyOrSad += i
+                # pass
+                #Добавить наводящие вопросы 
+
         for a in cmd.happy_array:
             if i == a:
                 if b.message == "H":
@@ -78,24 +93,44 @@ def detect_mood():
                 else:
                     playsound("files/audio/file_mood.mp3") 
                     record_audio()
+            else:
+                is_happyOrSad += i
+                #Добавить наводящие вопросы 
 
+    if is_happyOrSad != '':
+        logger.debug("Didn't find Sad or Happy")
+        playsound("files/audio/file_mood.mp3") 
+        is_happyOrSad=''
+        record_audio()
 
-ftp = FtpOwn()
-ftp.ftpConnect("213.226.112.19", 21)
-client = mqtt.Client()
-client.username_pw_set("tomatocoder", "Coder_tomato1")
-client.connect("mqtt.pi40.ru", 1883)
+try:
+    ftp = FtpOwn()
+    ftp.ftpConnect("213.226.112.19", 21)
 
-cap=cv2.VideoCapture(0)
-b = HaarCascade(cap)
+    client = mqtt.Client()
+    client.username_pw_set("tomatocoder", "Coder_tomato1")
+    client.connect("mqtt.pi40.ru", 1883)
+    client.subscribe(cmd.topic_complete)
+    client.message_callback_add(cmd.topic_complete, receiving_message_complete)
+    client.loop_start()
+    
+    cap=cv2.VideoCapture(0)
+    b = HaarCascade(cap)
 
-#---MAIN---#
-b.main()
-playsound("files/audio/file_wazup.mp3")
-record_audio()
+    #---MAIN---#
+    while message_complete != "1":
+        time.sleep(5)
 
-ftp.uploadFile("output.wav")
-logger.debug("uploaded AUDIO")
+    b.main()
+    playsound("files/audio/file_wazup.mp3")
+    record_audio()
 
+    ftp.uploadFile("output.wav")
+    logger.debug("uploaded AUDIO")
+    client.publish(cmd.topic_report_readiness, "R")
+
+except (socket.timeout, KeyboardInterrupt, socket.gaierror) as e:
+        logger.error(f"Произошла ошибка: {e}")
+        ftp.quitFile()
 
 

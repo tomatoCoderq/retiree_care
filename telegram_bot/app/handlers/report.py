@@ -1,4 +1,5 @@
 from aiogram import types, Dispatcher
+import socket
 from aiogram.dispatcher.filters import Text
 from loguru import logger
 from socket import timeout
@@ -21,7 +22,6 @@ def receiving_message_report(client, userdata, msg):
 def receiving_message_nuero(client, userdata, msg):
     global message_nuero
     message_nuero = msg.payload.decode()
-    print(message_nuero)
 
 def retiree_status():
     global pulse, brain_activity
@@ -32,7 +32,7 @@ def retiree_status():
         pulse = message_nuero[2:]
         if int(pulse) > 75 and int(pulse) < 85:
             pass
-        elif int(pulse) < 75:
+        elif int(pulse)< 75:
             print("too low")
         else:
             print("too high")
@@ -71,7 +71,9 @@ async def report(message:types.Message):
         await message.answer_photo(photo=photo)
         await message.answer_audio(audio=audio)
         logger.info(f"Send photo and audio")
-    except (timeout, KeyboardInterrupt):
+
+    except (timeout, KeyboardInterrupt, socket.gaierror) as e:
+        logger.error(f"Произошла ошибка: {e}")
         ftp.quitFile()
 
 def register_handlers_report(dp:Dispatcher):

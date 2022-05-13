@@ -27,11 +27,8 @@ audio_jokes = ["fileJoke1", "fileJoke2", "fileJoke3"]
 
 topic_neuro_modules = "tomatocoder/neuro"
 topic_report = "tomatocoder/report"
+topic_complete = "tomatocoder/turn_complete"
+topic_report_readiness = "tomatocoder/readiness"
 
-def mqtt_connection():
-    client = mqtt.Client()
-    client.username_pw_set("tomatocoder", "Coder_tomato1")
-    client.connect("mqtt.pi40.ru", 1883)
-    return client
 
 ip = "213.226.112.19"
