@@ -29,6 +29,8 @@ topic_neuro_modules = "tomatocoder/neuro"
 topic_report = "tomatocoder/report"
 topic_complete = "tomatocoder/turn_complete"
 topic_report_readiness = "tomatocoder/readiness"
+topic_back = "tomatocoder/get"
+topic_go = "tomatocoder/go"
 
 
 ip = "213.226.112.19"

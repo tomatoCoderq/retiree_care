@@ -1,20 +1,21 @@
-import cv2
+import ftplib
 import os
+import sys
+import random
+import time
 import socket
 from playsound import playsound
 import speech_recognition as speech_r
 import pyaudio
 import wave
-import random
-import time
+import cv2
 from loguru import logger
 import paho.mqtt.client as mqtt
-import cmd
+from setupF import cmnd
 from haarcascade import HaarCascade
-from ftpOwn import FtpOwn
+from setupF import ftpOwn
 
-
-logger.add("debug.log", format="| {time} | {level} | {message}") 
+logger.add("setupF/debug.log", format="| {time} | {level} | {message}", colorize=True) 
 word = []
 message_complete = ''
 
@@ -30,19 +31,19 @@ def record_audio():
     while flag == 1:
         if os.path.isfile('frame.jpg') == True:
             p = pyaudio.PyAudio()
-            stream = p.open(format=cmd.FRT,channels=cmd.CHAN,rate=cmd.RT,
-                           input=True,frames_per_buffer=cmd.CHUNK) 
+            stream = p.open(format=cmnd.FRT,channels=cmnd.CHAN,rate=cmnd.RT,
+                           input=True,frames_per_buffer=cmnd.CHUNK) 
 
             logger.debug("Started recording")
             frames = [] 
-            for i in range(0, int(cmd.RT / cmd.CHUNK * cmd.REC_SEC)):
-                data = stream.read(cmd.CHUNK)
+            for i in range(0, int(cmnd.RT / cmnd.CHUNK * cmnd.REC_SEC)):
+                data = stream.read(cmnd.CHUNK)
                 frames.append(data)
             logger.debug("Done")
 
             stream.stop_stream(); stream.close();p.terminate()
             w = wave.open("output.wav", 'wb')
-            w.setnchannels(cmd.CHAN); w.setsampwidth(p.get_sample_size(cmd.FRT)); w.setframerate(cmd.RT)
+            w.setnchannels(cmnd.CHAN); w.setsampwidth(p.get_sample_size(cmnd.FRT)); w.setframerate(cmnd.RT)
             w.writeframes(b''.join(frames)); w.close()
             sample = speech_r.WavFile('output.wav')
             flag = 0
@@ -65,7 +66,7 @@ def record_audio():
 def detect_mood():
     is_happyOrSad = ''
     for i in word:
-        for a in cmd.sad_array:
+        for a in cmnd.sad_array:
             if i == a:
                 if b.message == "S":
                     playsound("files/audio/file_S.mp3")
@@ -73,7 +74,7 @@ def detect_mood():
                     #Добавить предложение рассказать шутку
                     client.publish("tomatocoder/report","S")
                     logger.debug("Sad")
-                    playsound(f"files/audio/{cmd.audio_jokes[random.randint(0,2)]}.mp3")
+                    playsound(f"files/audio/{cmnd.audio_jokes[random.randint(0,2)]}.mp3")
                     return None
                 else:
                     playsound("files/audio/file_mood.mp3")
@@ -84,7 +85,7 @@ def detect_mood():
                 # pass
                 #Добавить наводящие вопросы 
 
-        for a in cmd.happy_array:
+        for a in cmnd.happy_array:
             if i == a:
                 if b.message == "H":
                     playsound("files/audio/file_H.mp3")
@@ -103,34 +104,64 @@ def detect_mood():
         is_happyOrSad=''
         record_audio()
 
+def mainActions():
+    global message_complete
+    while True:
+        while message_complete != "1":
+            time.sleep(5)
+        message_complete = ""
+
+        b.main()
+        playsound("files/audio/file_wazup.mp3")
+        record_audio()
+
+        client.publish(cmnd.topic_report_readiness, "R")
+        client.publish(cmnd.topic_go, "b")
+
+        ftp.uploadFile("output.wav")
+        logger.debug("uploaded AUDIO")
+        ftp.uploadFile("frame.jpg")
+        logger.debug("UPLOADED PHOTO")
+
+        cv2.destroyAllWindows()
+        cv2.waitKey(1)
+
 try:
-    ftp = FtpOwn()
+    ftp = ftpOwn.FtpOwn()
     ftp.ftpConnect("213.226.112.19", 21)
 
     client = mqtt.Client()
     client.username_pw_set("tomatocoder", "Coder_tomato1")
     client.connect("mqtt.pi40.ru", 1883)
-    client.subscribe(cmd.topic_complete)
-    client.message_callback_add(cmd.topic_complete, receiving_message_complete)
+    client.subscribe(cmnd.topic_complete)
+    client.subscribe(cmnd.topic_go)
+    client.message_callback_add(cmnd.topic_complete, receiving_message_complete)
     client.loop_start()
     
     cap=cv2.VideoCapture(0)
     b = HaarCascade(cap)
 
-    #---MAIN---#
-    while message_complete != "1":
-        time.sleep(5)
+    mainActions()
 
-    b.main()
-    playsound("files/audio/file_wazup.mp3")
-    record_audio()
-
-    ftp.uploadFile("output.wav")
-    logger.debug("uploaded AUDIO")
-    client.publish(cmd.topic_report_readiness, "R")
-
-except (socket.timeout, KeyboardInterrupt, socket.gaierror) as e:
+except KeyboardInterrupt as e:
         logger.error(f"Произошла ошибка: {e}")
         ftp.quitFile()
+    
+except socket.timeout as e:
+        logger.error(f"Произошла ошибка: {e}")
+        ftp.quitFile()
+
+except socket.gaierror as e:
+        logger.error(f"Произошла ошибка: {e}")
+        ftp.quitFile()
+
+except ftplib.error_temp as e:
+        logger.error(f"Произошла ошибка: {e}")
+        ftp.ftpConnect("213.226.112.19", 21)
+        ftp.uploadFile("output.wav")
+        logger.debug("uploaded AUDIO")
+        ftp.uploadFile("frame.jpg")
+        logger.debug("UPLOADED PHOTO")
+        mainActions()
 
 

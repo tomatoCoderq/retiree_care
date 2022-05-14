@@ -3,7 +3,7 @@ from ftplib import FTP, FTP_TLS
 
 class FtpOwn():
     def __init__(self):
-        self.ftp = FTP()
+        self.ftp = FTP(timeout=600)
 
     '''Функция ftpConnect позволяет подключить к серверу(Внимание!Не забудьте включить сервер сперва). Принимает: 
         ip(ip-адрес сервера. Пример 127.0.0.1)

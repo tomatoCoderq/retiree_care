@@ -7,7 +7,7 @@ from app.config_reader import load_config
 from app.handlers.check_retiree import register_check_retiree
 from app.handlers.common import register_handlers_common
 from app.handlers.report import register_handlers_report
-import cmd
+
 
 message_complete = ''
 

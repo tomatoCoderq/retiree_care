@@ -4,15 +4,14 @@ import numpy as np
 import os
 from playsound import playsound
 import time
-from ftpOwn import FtpOwn
-
+from setupF import ftpOwn
 
 class HaarCascade():
     message = ""
 
     def __init__(self,video):
         self.video=video
-        self.ftp = FtpOwn()
+        self.ftp = ftpOwn.FtpOwn()
         self.ftp.ftpConnect("213.226.112.19", 21)
 
     def detect_face(self,img):
@@ -62,9 +61,9 @@ class HaarCascade():
             label_text = subjects[label[0]]
             self.draw_rectangle(img, rect)
             self.draw_text(img, label_text, rect[0], rect[1] - 5)
-
-
+        
         return img, label_text
+
     def main(self):        
         logger.debug("Подготовка папок...")
         faces, labels = self.prepare_training_data()
@@ -76,7 +75,6 @@ class HaarCascade():
         count = 0
 
         while count < 50:
-            print(is_face)
             isRead, image = self.video.read()
             face, rect = self.detect_face(image)
             predicted_img1, b = self.predict(image, face_recognizer)
@@ -85,12 +83,10 @@ class HaarCascade():
             if face is not None:
                 count += 1
                 is_face=False
-        cv2.destroyWindow("screen")
         
         os.remove("frame.jpg")
         cv2.imwrite("frame.jpg", predicted_img1)
-        self.ftp.uploadFile("frame.jpg")
-        logger.debug("UPLOADED PHOTO")
+
         if face is not None:
             a, label_text = self.predict(image, face_recognizer)
             if text_old == '':
@@ -127,5 +123,5 @@ class HaarCascade():
                         time.sleep(3)
                     else:
                         pass
-        cv2.destroyAllWindows()
-        self.video.release()
+        # cv2.destroyAllWindows()
+        logger.debug("FINISH ")
