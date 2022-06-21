@@ -23,21 +23,6 @@ def receiving_message_nuero(client, userdata, msg):
     global message_nuero
     message_nuero = msg.payload.decode()
 
-# def retiree_status():
-#     global pulse, brain_activity
-#     if len(message_nuero) < 4:
-#         pass
-#     else:
-#         brain_activity = message_nuero[0:2]
-#         pulse = message_nuero[2:]
-#         if int(pulse) > 75 and int(pulse) < 85:
-#             pass
-#         elif int(pulse)< 75:
-#             print("too low")
-#         else:
-#             print("too high")
-
-
 async def report(message:types.Message):
     global pulse, brain_activity
     try:
@@ -63,7 +48,6 @@ async def report(message:types.Message):
         if len(message_nuero) >= 4:
             brain_activity = message_nuero[0:2]
             pulse = message_nuero[2:] 
-
             await message.answer(f"""Ваш отчёт: 
             Пульс пенсионера - {pulse}
             Мозговая активность - {brain_activity}""")

@@ -2,6 +2,8 @@ import asyncio
 from aiogram import Bot, types, Dispatcher
 from loguru import logger
 import paho.mqtt.client as mqtt
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
+
 
 from app.config_reader import load_config
 from app.handlers.check_retiree import register_check_retiree
@@ -21,7 +23,7 @@ async def main():
     config = load_config('config/main.ini')
 
     bot = Bot(token = config.tg_bot.token, parse_mode=types.ParseMode.HTML)
-    dp = Dispatcher(bot)
+    dp = Dispatcher(bot, storage=MemoryStorage())
 
     client = mqtt.Client()
     client.username_pw_set("tomatocoder", "Coder_tomato1")
